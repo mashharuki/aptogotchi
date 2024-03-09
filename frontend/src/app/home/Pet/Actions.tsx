@@ -22,6 +22,11 @@ export interface ActionsProps {
   setPet: Dispatch<SetStateAction<Pet | undefined>>;
 }
 
+/**
+ * Actions コンポーネント
+ * @param param0 
+ * @returns 
+ */
 export function Actions({
   selectedAction,
   setSelectedAction,
@@ -43,12 +48,17 @@ export function Actions({
     }
   };
 
+  /**
+   * Feed ボタンを押した時の処理
+   * @returns 
+   */
   const handleFeed = async () => {
     if (!account || !network) return;
 
     setTransactionInProgress(true);
 
     try {
+      // feedメソッドを呼び出す。
       const response = await signAndSubmitTransaction({
         sender: account.address,
         data: {
@@ -80,12 +90,17 @@ export function Actions({
     }
   };
 
+  /**
+   * Playボタンを押した時の処理
+   * @returns 
+   */
   const handlePlay = async () => {
     if (!account || !network) return;
 
     setTransactionInProgress(true);
 
     try {
+      // スマートコントラクトのplayメソッドを呼び出す
       const response = await signAndSubmitTransaction({
         sender: account.address,
         data: {

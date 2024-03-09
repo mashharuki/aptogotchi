@@ -12,13 +12,21 @@ const TESTNET_ID = "2";
 
 const aptosClient = getAptosClient();
 
+/**
+ * Connected コンポーネント
+ * @returns 
+ */
 export function Connected() {
   const [pet, setPet] = useState<Pet>();
   const { account, network } = useWallet();
 
+  /**
+   * スマートコントラクトからデータを読み取るメソッド
+   */
   const fetchPet = useCallback(async () => {
     if (!account?.address) return;
 
+    // has_aptogotchiメソッドを呼び出してAptogochiを所持しているか確認する。
     const [hasPet] = await aptosClient.view({
       payload: {
         function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::has_aptogotchi`,
@@ -26,6 +34,7 @@ export function Connected() {
       },
     });
     if (hasPet as boolean) {
+      // Aptogochiを所持していたら詳細情報を取得する。
       const response = await aptosClient.view({
         payload: {
           function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::get_aptogotchi`,
