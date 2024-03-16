@@ -4,12 +4,9 @@ version = "1.0.0"
 upgrade_policy = "compatible"
 
 [addresses]
-aptogotchi = "0xaa845b38dd50f39e8be7a66a6368d26b9d53d813ecc69ab2f4d142a6952ee2f8"
+aptogotchi = "9324da379576a6210929ee2611cd1995a21451d0be44ec92a92d17cae1d665ee"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "main", subdir = "aptos-move/framework/aptos-framework"}
 AptosTokenObjects = {git = "https://github.com/aptos-labs/aptos-core.git", rev = "main", subdir = "aptos-move/framework/aptos-token-objects"}
 
-# For use when developing and testing this module
-[dev-addresses]
-aptogotchi = "0xaa845b38dd50f39e8be7a66a6368d26b9d53d813ecc69ab2f4d142a6952ee2f8"
