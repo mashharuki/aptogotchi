@@ -10,3 +10,5 @@ aptogotchi = "9324da379576a6210929ee2611cd1995a21451d0be44ec92a92d17cae1d665ee"
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "main", subdir = "aptos-move/framework/aptos-framework"}
 AptosTokenObjects = {git = "https://github.com/aptos-labs/aptos-core.git", rev = "main", subdir = "aptos-move/framework/aptos-token-objects"}
 
+[dev-addresses]
+aptogotchi = "9324da379576a6210929ee2611cd1995a21451d0be44ec92a92d17cae1d665ee"

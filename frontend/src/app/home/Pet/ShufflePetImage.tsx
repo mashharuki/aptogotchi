@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Pet, PetParts } from ".";
-import { PetImage } from "./Image";
+import { Pet } from ".";
+import { PetImage, bodies, ears, faces } from "./Image";
 import { ShuffleButton } from "@/components/ShuffleButton";
 import {
   NEXT_PUBLIC_BODY_OPTIONS,
@@ -10,25 +10,39 @@ import {
   NEXT_PUBLIC_FACE_OPTIONS,
 } from "@/utils/env";
 
+const defaultPet: Pet = {
+  name: "Unknown",
+  energy_points: 0,
+  parts: [] as number[],
+  accessories: "",
+};
+
 export function ShufflePetImage({
   petParts,
   setPetParts,
 }: {
-  petParts: PetParts;
-  setPetParts: React.Dispatch<React.SetStateAction<PetParts>>;
+  petParts: number[];
+  setPetParts: React.Dispatch<React.SetStateAction<number[]>>;
 }) {
   const handleShuffle = () => {
-    const randomPetParts = {
-      body: Math.floor(Math.random() * Number(NEXT_PUBLIC_BODY_OPTIONS)),
-      ear: Math.floor(Math.random() * Number(NEXT_PUBLIC_EAR_OPTIONS)),
-      face: Math.floor(Math.random() * Number(NEXT_PUBLIC_FACE_OPTIONS)),
-    };
-    setPetParts(randomPetParts);
+    const randomPet = [
+      Math.floor(Math.random() * Number(NEXT_PUBLIC_BODY_OPTIONS)),
+      Math.floor(Math.random() * Number(NEXT_PUBLIC_EAR_OPTIONS)),
+      Math.floor(Math.random() * Number(NEXT_PUBLIC_FACE_OPTIONS)),
+    ];
+    setPetParts(randomPet);
   };
 
   return (
     <div className="flex flex-col gap-6 self-center">
-      <PetImage petParts={petParts} />
+      <PetImage
+        pet={defaultPet}
+        petParts={{
+          body: bodies[petParts[0]],
+          ears: ears[petParts[1]],
+          face: faces[petParts[2]],
+        }}
+      />
       <ShuffleButton handleShuffle={handleShuffle} />
     </div>
   );

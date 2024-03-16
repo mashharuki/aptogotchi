@@ -7,31 +7,38 @@ import { getAptosClient } from "@/utils/aptosClient";
 import {
   NEXT_PUBLIC_CONTRACT_ADDRESS,
   NEXT_PUBLIC_ENERGY_CAP,
+  NEXT_PUBLIC_FOOD_INCREASE,
   NEXT_PUBLIC_ENERGY_DECREASE,
   NEXT_PUBLIC_ENERGY_INCREASE,
 } from "@/utils/env";
+import { Food } from "../Food";
 
 const aptosClient = getAptosClient();
 
-export type PetAction = "feed" | "play";
+export type Action =
+  | "feed"
+  | "play"
+  | "buy_accessory"
+  | "buy_food"
+  | "wear"
+  | "unwear";
 
 export interface ActionsProps {
   pet: Pet;
-  selectedAction: PetAction;
-  setSelectedAction: (action: PetAction) => void;
+  food: Food;
+  selectedAction: Action;
+  setSelectedAction: (action: Action) => void;
   setPet: Dispatch<SetStateAction<Pet | undefined>>;
+  setFood: Dispatch<SetStateAction<Food | undefined>>;
 }
 
-/**
- * Actions コンポーネント
- * @param param0 
- * @returns 
- */
 export function Actions({
   selectedAction,
   setSelectedAction,
   setPet,
+  setFood,
   pet,
+  food,
 }: ActionsProps) {
   const [transactionInProgress, setTransactionInProgress] =
     useState<boolean>(false);
@@ -45,28 +52,34 @@ export function Actions({
       case "play":
         handlePlay();
         break;
+      case "buy_accessory":
+        handleBuyAccessory();
+        break;
+      case "buy_food":
+        handleBuyFood();
+        break;
+      case "wear":
+        handleWear();
+        break;
+      case "unwear":
+        handleUnwear();
+        break;
     }
   };
 
-  /**
-   * Feed ボタンを押した時の処理
-   * @returns 
-   */
   const handleFeed = async () => {
     if (!account || !network) return;
 
     setTransactionInProgress(true);
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::feed`,
+      type_arguments: [],
+      arguments: [NEXT_PUBLIC_ENERGY_INCREASE],
+    };
 
     try {
-      // feedメソッドを呼び出す。
-      const response = await signAndSubmitTransaction({
-        sender: account.address,
-        data: {
-          function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::feed`,
-          typeArguments: [],
-          functionArguments: [NEXT_PUBLIC_ENERGY_INCREASE],
-        },
-      });
+      const response = await signAndSubmitTransaction(payload);
       await aptosClient.waitForTransaction({ transactionHash: response.hash });
 
       setPet((pet) => {
@@ -83,6 +96,14 @@ export function Actions({
             pet.energy_points + Number(NEXT_PUBLIC_ENERGY_INCREASE),
         };
       });
+      setFood((food) => {
+        if (!food) return food;
+
+        return {
+          ...food,
+          number: food.number - Number(NEXT_PUBLIC_ENERGY_DECREASE),
+        };
+      });
     } catch (error: any) {
       console.error(error);
     } finally {
@@ -90,25 +111,19 @@ export function Actions({
     }
   };
 
-  /**
-   * Playボタンを押した時の処理
-   * @returns 
-   */
   const handlePlay = async () => {
     if (!account || !network) return;
 
     setTransactionInProgress(true);
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::play`,
+      type_arguments: [],
+      arguments: [NEXT_PUBLIC_ENERGY_DECREASE],
+    };
 
     try {
-      // スマートコントラクトのplayメソッドを呼び出す
-      const response = await signAndSubmitTransaction({
-        sender: account.address,
-        data: {
-          function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::play`,
-          typeArguments: [],
-          functionArguments: [NEXT_PUBLIC_ENERGY_DECREASE],
-        },
-      });
+      const response = await signAndSubmitTransaction(payload);
       await aptosClient.waitForTransaction({
         transactionHash: response.hash,
       });
@@ -131,11 +146,128 @@ export function Actions({
     }
   };
 
+  const handleBuyFood = async () => {
+    if (!account || !network) return;
+
+    setTransactionInProgress(true);
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::main::buy_food`,
+      type_arguments: [],
+      arguments: [NEXT_PUBLIC_FOOD_INCREASE],
+    };
+
+    try {
+      // Add food
+      const response = await signAndSubmitTransaction(payload);
+      await aptosClient.waitForTransaction(response.hash);
+
+      setFood((food) => {
+        if (!food) return food;
+
+        return {
+          ...food,
+          number: food.number + Number(NEXT_PUBLIC_ENERGY_INCREASE),
+        };
+      });
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setTransactionInProgress(false);
+    }
+  };
+
+  const handleBuyAccessory = async () => {
+    if (!account || !network) return;
+
+    setTransactionInProgress(true);
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::main::create_accessory`,
+      type_arguments: [],
+      arguments: ["bowtie"],
+    };
+
+    try {
+      // show accessory in inventory
+      const response = await signAndSubmitTransaction(payload);
+      await aptosClient.waitForTransaction(response.hash);
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setTransactionInProgress(false);
+    }
+  };
+
+  const handleWear = async () => {
+    if (!account || !network) return;
+
+    setTransactionInProgress(true);
+
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::main::wear_accessory`,
+      type_arguments: [],
+      arguments: ["bowtie"],
+    };
+
+    try {
+      const response = await signAndSubmitTransaction(payload);
+      await aptosClient.waitForTransaction(response.hash);
+
+      setPet((pet) => {
+        if (!pet) return pet;
+        return {
+          ...pet,
+          accessories: "bowtie",
+        };
+      });
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setTransactionInProgress(false);
+    }
+  };
+
+  const handleUnwear = async () => {
+    if (!account || !network) return;
+
+    setTransactionInProgress(true);
+
+    const payload: any = {
+      type: "entry_function_payload",
+      function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::main::unwear_accessory`,
+      type_arguments: [],
+      arguments: ["bowtie"],
+    };
+
+    try {
+      const response = await signAndSubmitTransaction(payload);
+      await aptosClient.waitForTransaction(response.hash);
+
+      setPet((pet) => {
+        if (!pet) return pet;
+        return {
+          ...pet,
+          accessories: null,
+        };
+      });
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setTransactionInProgress(false);
+    }
+  };
+
   const feedDisabled =
     selectedAction === "feed" &&
     pet.energy_points === Number(NEXT_PUBLIC_ENERGY_CAP);
   const playDisabled =
     selectedAction === "play" && pet.energy_points === Number(0);
+  const wearDisabled = Boolean(selectedAction === "wear" && pet.accessories);
+  const unwearDisabled = Boolean(
+    selectedAction === "unwear" && pet.accessories == null,
+  );
 
   return (
     <div className="nes-container with-title flex-1 bg-white h-[320px]">
@@ -162,16 +294,64 @@ export function Actions({
             />
             <span>Feed</span>
           </label>
+          <label>
+            <input
+              type="radio"
+              className="nes-radio"
+              name="action"
+              checked={selectedAction === "buy_food"}
+              onChange={() => setSelectedAction("buy_food")}
+            />
+            <span>Buy Food</span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              className="nes-radio"
+              name="action"
+              checked={selectedAction === "buy_accessory"}
+              onChange={() => setSelectedAction("buy_accessory")}
+            />
+            <span>Buy Accessory</span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              className="nes-radio"
+              name="action"
+              checked={selectedAction === "wear"}
+              onChange={() => setSelectedAction("wear")}
+            />
+            <span>Wear</span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              className="nes-radio"
+              name="action"
+              checked={selectedAction === "unwear"}
+              onChange={() => setSelectedAction("unwear")}
+            />
+            <span>Unwear</span>
+          </label>
         </div>
         <div className="flex flex-col gap-4 justify-between">
           <p>{actionDescriptions[selectedAction]}</p>
           <button
             type="button"
             className={`nes-btn is-success ${
-              feedDisabled || playDisabled ? "is-disabled" : ""
+              feedDisabled || playDisabled || wearDisabled || unwearDisabled
+                ? "is-disabled"
+                : ""
             }`}
             onClick={handleStart}
-            disabled={transactionInProgress || feedDisabled || playDisabled}
+            disabled={
+              transactionInProgress ||
+              feedDisabled ||
+              playDisabled ||
+              wearDisabled ||
+              unwearDisabled
+            }
           >
             {transactionInProgress ? "Processing..." : "Start"}
           </button>
@@ -181,7 +361,11 @@ export function Actions({
   );
 }
 
-const actionDescriptions: Record<PetAction, string> = {
+const actionDescriptions: Record<Action, string> = {
   feed: "Feeding your pet will boost its Energy Points...",
   play: "Playing with your pet will make it happy and consume its Energy Points...",
+  buy_food: "Buying food for your pet...",
+  buy_accessory: "Buying an accessory for your pet...",
+  wear: "Wear an accessory for your pet...",
+  unwear: "Take off an accessory for your pet...",
 };
